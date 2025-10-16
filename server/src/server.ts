@@ -5,7 +5,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
 import { connectRedis, disconnectRedis } from './config/redis.js';
 import profileRoutes from './routes/profileRoutes.js';
@@ -13,6 +12,7 @@ import eventRoutes from './routes/eventRoutes.js';
 import { timezoneDetector } from './middleware/timezoneMiddleware.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { getAllTimezones } from './utils/timezoneHelper.js';
+import { redisRateLimiter } from './middleware/rateLimiter.js';
 
 dotenv.config();
 
@@ -39,18 +39,16 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), 
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-app.use('/api/', limiter);
+app.use(
+  redisRateLimiter({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    message: {
+      success: false,
+      message: 'Too many requests from this IP, please try again later.',
+    },
+  })
+);
 
 // timezone detection middleware
 app.use(timezoneDetector);
