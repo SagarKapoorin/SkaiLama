@@ -35,7 +35,7 @@ router.get('/',
 
 router.get('/:profileId',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.profileById(req.params.profileId),
+    keyGenerator: (req) => generateCacheKey.profileById(req.params.profileId!), 
     ttl: 1800
   }),
   getProfileById

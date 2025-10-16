@@ -47,7 +47,7 @@ router.get('/',
 router.get('/profile/:profileId', 
   cacheMiddleware({
     keyGenerator: (req) => generateCacheKey.eventsByProfile(
-      req.params.profileId,
+      req.params.profileId!, 
       req.clientTimezone || 'UTC'
     ),
     ttl: 1800
@@ -57,7 +57,7 @@ router.get('/profile/:profileId',
 
 router.get('/:eventId',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.eventById(req.params.eventId),
+    keyGenerator: (req) => generateCacheKey.eventById(req.params.eventId!), 
     ttl: 600
   }),
   getEventById
@@ -89,7 +89,7 @@ router.put('/:eventId',
 
 router.get('/:eventId/logs',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.eventLogs(req.params.eventId),
+    keyGenerator: (req) => generateCacheKey.eventLogs(req.params.eventId!), 
     ttl: 300
   }),
   getEventLogs
