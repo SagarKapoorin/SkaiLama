@@ -27,7 +27,11 @@ router.post('/',
 
 router.get('/', 
   cacheMiddleware({
-    keyGenerator: () => generateCacheKey.allProfiles(),
+    keyGenerator: (req) => {
+      const limit = parseInt((req.query.limit as string) || '100', 10);
+      const skip = parseInt((req.query.skip as string) || '0', 10);
+      return generateCacheKey.allProfiles(skip, limit);
+    },
     ttl: 3600
   }),
   getAllProfiles

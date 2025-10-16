@@ -33,13 +33,21 @@ export const getAllProfiles = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const limit = parseInt((req.query.limit as string) || '100', 10);
+    const skip = parseInt((req.query.skip as string) || '0', 10);
+    const total = await Profile.countDocuments();
     const profiles = await Profile.find()
       .sort({ createdAt: -1 })
-      .lean<IProfile[]>();  
+      .skip(skip)
+      .limit(limit)
+      .lean<IProfile[]>();
     
     res.status(200).json({
       success: true,
       count: profiles.length,
+      total,
+      skip,
+      limit,
       data: profiles
     });
   } catch (error) {

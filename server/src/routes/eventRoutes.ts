@@ -46,10 +46,16 @@ router.get('/',
 // Get events by profile (cached for 30 minutes)
 router.get('/profile/:profileId', 
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.eventsByProfile(
-      req.params.profileId!, 
-      req.clientTimezone || 'UTC'
-    ),
+    keyGenerator: (req) => {
+      const limit = parseInt((req.query.limit as string) || '100', 10);
+      const skip = parseInt((req.query.skip as string) || '0', 10);
+      return generateCacheKey.eventsByProfile(
+        req.params.profileId!,
+        req.clientTimezone || 'UTC',
+        skip,
+        limit
+      );
+    },
     ttl: 1800
   }),
   getEventsByProfile
@@ -89,7 +95,15 @@ router.put('/:eventId',
 
 router.get('/:eventId/logs',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.eventLogs(req.params.eventId!), 
+    keyGenerator: (req) => {
+      const limit = parseInt((req.query.limit as string) || '100', 10);
+      const skip = parseInt((req.query.skip as string) || '0', 10);
+      return generateCacheKey.eventLogs(
+        req.params.eventId!,
+        skip,
+        limit
+      );
+    },
     ttl: 300
   }),
   getEventLogs

@@ -69,11 +69,18 @@ export const clearAllCache = async (): Promise<void> => {
 };
 
 export const generateCacheKey = {
-  allProfiles: () => 'profiles:all',
+
+  allProfiles: (skip: number = 0, limit: number = 100) =>
+    `profiles:all:skip:${skip}:limit:${limit}`,
   profileById: (profileId: string) => `profile:${profileId}`,
-  eventsByProfile: (profileId: string, timezone: string) => 
-    `events:profile:${profileId}:tz:${timezone}`,
+  eventsByProfile: (
+    profileId: string,
+    timezone: string,
+    skip: number = 0,
+    limit: number = 100
+  ) => `events:profile:${profileId}:tz:${timezone}:skip:${skip}:limit:${limit}`,
   eventById: (eventId: string) => `event:${eventId}`,
-  eventLogs: (eventId: string) => `event:${eventId}:logs`,
+  eventLogs: (eventId: string, skip: number = 0, limit: number = 100) =>
+    `event:${eventId}:logs:skip:${skip}:limit:${limit}`,
   allTimezones: () => 'timezones:all'
 };

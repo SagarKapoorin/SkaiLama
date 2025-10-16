@@ -47,6 +47,9 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   count?: number;
+  total?: number;
+  skip?: number;
+  limit?: number;
   message?: string;
   errors?: any[];
 }

@@ -68,12 +68,15 @@ export const getEventsByProfile = async (
   try {
     const { profileId } = req.params;
     const clientTimezone = req.clientTimezone || 'UTC';
-
-    const events = await Event.find({ 
-      profileIds: new Types.ObjectId(profileId) 
-    })
-      .populate('profileIds', 'name timezone')
+    const limit = parseInt((req.query.limit as string) || '100', 10);
+    const skip = parseInt((req.query.skip as string) || '0', 10);
+    const filter = { profileIds: new Types.ObjectId(profileId) };
+    const total = await Event.countDocuments(filter);
+    const events = await Event.find(filter)
       .sort({ startDateTime: 1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('profileIds', 'name timezone')
       .lean();
 
     const formattedEvents = events.map(event => ({
@@ -88,6 +91,9 @@ export const getEventsByProfile = async (
     res.status(200).json({
       success: true,
       count: formattedEvents.length,
+      total,
+      skip,
+      limit,
       data: formattedEvents
     });
   } catch (error) {
@@ -102,10 +108,17 @@ export const getAllEvents = async (
 ): Promise<void> => {
   try {
     const clientTimezone = req.clientTimezone || 'UTC';
-
+    // Pagination parameters
+    const limit = parseInt((req.query.limit as string) || '100', 10);
+    const skip = parseInt((req.query.skip as string) || '0', 10);
+    // Total count before pagination
+    const total = await Event.countDocuments();
+    // Fetch paginated events
     const events = await Event.find()
-      .populate('profileIds', 'name timezone')
       .sort({ startDateTime: 1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('profileIds', 'name timezone')
       .lean();
 
     const formattedEvents = events.map(event => ({
@@ -119,7 +132,13 @@ export const getAllEvents = async (
 
     res.status(200).json({
       success: true,
+      // Number of items returned in this page
       count: formattedEvents.length,
+      // Total number of items available
+      total,
+      // Pagination info
+      skip,
+      limit,
       data: formattedEvents
     });
   } catch (error) {
@@ -260,9 +279,18 @@ export const getEventLogs = async (
   try {
     const { eventId } = req.params;
     const clientTimezone = req.clientTimezone || 'UTC';
-
-    const logs = await EventLog.find({ eventId })
+    // Pagination parameters
+    const limit = parseInt((req.query.limit as string) || '100', 10);
+    const skip = parseInt((req.query.skip as string) || '0', 10);
+    // Filter by eventId
+    const filter = { eventId: new Types.ObjectId(eventId) };
+    // Total count before pagination
+    const total = await EventLog.countDocuments(filter);
+    // Fetch paginated logs
+    const logs = await EventLog.find(filter)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     const formattedLogs = logs.map(log => ({
@@ -292,7 +320,13 @@ export const getEventLogs = async (
 
     res.status(200).json({
       success: true,
+      // Number of items returned in this page
       count: formattedLogs.length,
+      // Total number of items available
+      total,
+      // Pagination info
+      skip,
+      limit,
       data: formattedLogs
     });
   } catch (error) {

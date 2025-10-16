@@ -16,6 +16,7 @@
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/express-xss-sanitizer": "^2.0.0",
     "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.7.2",
@@ -30,9 +31,12 @@
     "dayjs-ext": "^2.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-mongo-sanitize": "^2.2.0",
     "express-validator": "^7.2.1",
+    "express-xss-sanitizer": "^2.0.1",
     "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
-    "redis": "^5.8.3"
+    "redis": "^5.8.3",
+    "xss-clean": "^0.1.4"
   }
 }

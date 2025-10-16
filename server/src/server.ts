@@ -14,13 +14,16 @@ import { timezoneDetector } from './middleware/timezoneMiddleware.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { getAllTimezones } from './utils/timezoneHelper.js';
 import { redisRateLimiter } from './middleware/rateLimiter.js';
+import mongoSanitize from 'express-mongo-sanitize';
+import { xss } from 'express-xss-sanitizer';
 connectDB();
 connectRedis();
 
 const app: Application = express();
 
 app.use(helmet());
-
+app.use(mongoSanitize());  
+app.use(xss());        
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true
