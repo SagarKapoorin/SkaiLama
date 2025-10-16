@@ -32,15 +32,15 @@ router.get('/',
       const skip = parseInt((req.query.skip as string) || '0', 10);
       return generateCacheKey.allProfiles(skip, limit);
     },
-    ttl: 3600
+    ttl: 432000
   }),
   getAllProfiles
 );
 
 router.get('/:profileId',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.profileById(req.params.profileId!), 
-    ttl: 1800
+    keyGenerator: (req) => generateCacheKey.profileById(req.params.profileId!),
+    ttl: 432000
   }),
   getProfileById
 );

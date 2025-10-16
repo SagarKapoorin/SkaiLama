@@ -56,15 +56,15 @@ router.get('/profile/:profileId',
         limit
       );
     },
-    ttl: 1800
+    ttl: 432000
   }),
   getEventsByProfile
 );
 
 router.get('/:eventId',
   cacheMiddleware({
-    keyGenerator: (req) => generateCacheKey.eventById(req.params.eventId!), 
-    ttl: 600
+    keyGenerator: (req) => generateCacheKey.eventById(req.params.eventId!),
+    ttl: 432000
   }),
   getEventById
 );
@@ -104,7 +104,7 @@ router.get('/:eventId/logs',
         limit
       );
     },
-    ttl: 300
+    ttl: 432000
   }),
   getEventLogs
 );

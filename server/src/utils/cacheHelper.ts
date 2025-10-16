@@ -1,6 +1,6 @@
 import { getRedisClient, isRedisAvailable } from '../config/redis.js';
 
-const DEFAULT_TTL = parseInt(process.env.REDIS_TTL || '3600', 10);
+const DEFAULT_TTL = parseInt(process.env.REDIS_TTL || '432000', 10);
 export const getCachedData = async <T>(key: string): Promise<T | null> => {
   if (!isRedisAvailable()) return null;
   try {
