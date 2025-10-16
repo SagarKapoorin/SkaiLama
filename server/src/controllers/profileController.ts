@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import Profile from '../models/Profile.js';
-import type { ApiResponse, IProfileDocument, IProfileLean } from '../types/index.js';
+import type { ApiResponse, IProfile, IProfileDocument } from '../types/index.js';
 import { 
   deleteCachedData, 
   deleteCachedDataByPattern, 
@@ -14,8 +14,10 @@ export const createProfile = async (
 ): Promise<void> => {
   try {
     const { name, timezone } = req.body;
-    const profile = await Profile.create({ name, timezone });
+        const profile = await Profile.create({ name, timezone });
+    
     await deleteCachedData(generateCacheKey.allProfiles());
+    
     res.status(201).json({
       success: true,
       message: 'Profile created successfully',
@@ -25,16 +27,15 @@ export const createProfile = async (
     next(error);
   }
 };
-
 export const getAllProfiles = async (
   req: Request,
-  res: Response<ApiResponse<IProfileLean[]>>,
+  res: Response<ApiResponse<IProfile[]>>,  
   next: NextFunction
 ): Promise<void> => {
   try {
     const profiles = await Profile.find()
       .sort({ createdAt: -1 })
-      .lean();
+      .lean<IProfile[]>();  
     
     res.status(200).json({
       success: true,
@@ -45,17 +46,14 @@ export const getAllProfiles = async (
     next(error);
   }
 };
-
-
 export const getProfileById = async (
   req: Request,
-  res: Response<ApiResponse<IProfileLean>>,
+  res: Response<ApiResponse<IProfile>>, 
   next: NextFunction
 ): Promise<void> => {
   try {
     const { profileId } = req.params;
-
-    const profile = await Profile.findById(profileId).lean();
+    const profile = await Profile.findById(profileId).lean<IProfile>();
 
     if (!profile) {
       const error: any = new Error('Profile not found');
