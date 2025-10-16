@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from 'express';
-import { getRedisClient, isRedisAvailable } from '../config/redis.js';
+import type { Request, Response, NextFunction } from "express";
+import { getRedisClient, isRedisAvailable } from "../config/redis.js";
 
 export interface RateLimiterOptions {
   windowMs: number;
@@ -13,13 +13,17 @@ export const redisRateLimiter = (options: RateLimiterOptions) => {
   const {
     windowMs,
     maxRequests,
-    keyPrefix = 'rate_limit',
+    keyPrefix = "rate_limit",
     keyGenerator,
     message,
   } = options;
   const windowSeconds = Math.ceil(windowMs / 1000);
 
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     if (!isRedisAvailable()) {
       next();
       return;
@@ -34,20 +38,25 @@ export const redisRateLimiter = (options: RateLimiterOptions) => {
       }
       const ttl = await client.ttl(key);
 
-      res.setHeader('X-RateLimit-Limit', maxRequests.toString());
-      res.setHeader('X-RateLimit-Remaining', Math.max(maxRequests - current, 0).toString());
-      res.setHeader('X-RateLimit-Reset', (Date.now() + ttl * 1000).toString());
+      res.setHeader("X-RateLimit-Limit", maxRequests.toString());
+      res.setHeader(
+        "X-RateLimit-Remaining",
+        Math.max(maxRequests - current, 0).toString(),
+      );
+      res.setHeader("X-RateLimit-Reset", (Date.now() + ttl * 1000).toString());
 
       if (current > maxRequests) {
-        res.setHeader('Retry-After', ttl.toString());
-        res.status(429).json(
-          message || { error: 'Too many requests, please try again later.' }
-        );
+        res.setHeader("Retry-After", ttl.toString());
+        res
+          .status(429)
+          .json(
+            message || { error: "Too many requests, please try again later." },
+          );
         return;
       }
       next();
     } catch (err) {
-      console.error('Redis rate limiter error:', err);
+      console.error("Redis rate limiter error:", err);
       next();
     }
   };

@@ -1,29 +1,38 @@
-import type { Request, Response, NextFunction } from 'express';
-import { Types } from 'mongoose';
-import Event from '../models/Event.js';
-import EventLog from '../models/EventLog.js';
-import { 
-  convertToUTC, 
-  formatDateTime, 
-  validateDateRange 
-} from '../utils/timezoneHelper.js';
-import type { ApiResponse, IEventDocument } from '../types/index.js';
-import { 
-  deleteCachedData, 
-  deleteCachedDataByPattern, 
-  generateCacheKey 
-} from '../utils/cacheHelper.js';
+import type { Request, Response, NextFunction } from "express";
+import { Types } from "mongoose";
+import Event from "../models/Event.js";
+import EventLog from "../models/EventLog.js";
+import {
+  convertToUTC,
+  formatDateTime,
+  validateDateRange,
+} from "../utils/timezoneHelper.js";
+import type { ApiResponse, IEventDocument } from "../types/index.js";
+import {
+  deleteCachedData,
+  deleteCachedDataByPattern,
+  generateCacheKey,
+} from "../utils/cacheHelper.js";
 
 export const createEvent = async (
   req: Request,
   res: Response<ApiResponse<IEventDocument>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const { title, description, profileIds, timezone, startDateTime, endDateTime } = req.body;
+    const {
+      title,
+      description,
+      profileIds,
+      timezone,
+      startDateTime,
+      endDateTime,
+    } = req.body;
 
     if (!validateDateRange(startDateTime, endDateTime, timezone)) {
-      const error: any = new Error('End date/time must be after start date/time');
+      const error: any = new Error(
+        "End date/time must be after start date/time",
+      );
       error.statusCode = 400;
       throw error;
     }
@@ -34,15 +43,15 @@ export const createEvent = async (
       profileIds: profileIds.map((id: string) => new Types.ObjectId(id)),
       timezone,
       startDateTime: convertToUTC(startDateTime, timezone),
-      endDateTime: convertToUTC(endDateTime, timezone)
+      endDateTime: convertToUTC(endDateTime, timezone),
     });
 
     // Populate profile details
-    await event.populate('profileIds', 'name timezone');
+    await event.populate("profileIds", "name timezone");
     await EventLog.create({
       eventId: event._id,
-      action: 'created',
-      newValues: event.toObject()
+      action: "created",
+      newValues: event.toObject(),
     });
 
     for (const profileId of profileIds) {
@@ -51,41 +60,40 @@ export const createEvent = async (
 
     res.status(201).json({
       success: true,
-      message: 'Event created successfully',
-      data: event
+      message: "Event created successfully",
+      data: event,
     });
   } catch (error) {
     next(error);
   }
 };
 
-
 export const getEventsByProfile = async (
   req: Request,
   res: Response<ApiResponse<any[]>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { profileId } = req.params;
-    const clientTimezone = req.clientTimezone || 'UTC';
-    const limit = parseInt((req.query.limit as string) || '100', 10);
-    const skip = parseInt((req.query.skip as string) || '0', 10);
+    const clientTimezone = req.clientTimezone || "UTC";
+    const limit = parseInt((req.query.limit as string) || "100", 10);
+    const skip = parseInt((req.query.skip as string) || "0", 10);
     const filter = { profileIds: new Types.ObjectId(profileId) };
     const total = await Event.countDocuments(filter);
     const events = await Event.find(filter)
       .sort({ startDateTime: 1 })
       .skip(skip)
       .limit(limit)
-      .populate('profileIds', 'name timezone')
+      .populate("profileIds", "name timezone")
       .lean();
 
-    const formattedEvents = events.map(event => ({
+    const formattedEvents = events.map((event) => ({
       ...event,
       startDateTime: formatDateTime(event.startDateTime, clientTimezone),
       endDateTime: formatDateTime(event.endDateTime, clientTimezone),
       displayTimezone: clientTimezone,
       createdAt: formatDateTime(event.createdAt, clientTimezone),
-      updatedAt: formatDateTime(event.updatedAt, clientTimezone)
+      updatedAt: formatDateTime(event.updatedAt, clientTimezone),
     }));
 
     res.status(200).json({
@@ -94,7 +102,7 @@ export const getEventsByProfile = async (
       total,
       skip,
       limit,
-      data: formattedEvents
+      data: formattedEvents,
     });
   } catch (error) {
     next(error);
@@ -104,13 +112,13 @@ export const getEventsByProfile = async (
 export const getAllEvents = async (
   req: Request,
   res: Response<ApiResponse<any[]>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const clientTimezone = req.clientTimezone || 'UTC';
+    const clientTimezone = req.clientTimezone || "UTC";
     // Pagination parameters
-    const limit = parseInt((req.query.limit as string) || '100', 10);
-    const skip = parseInt((req.query.skip as string) || '0', 10);
+    const limit = parseInt((req.query.limit as string) || "100", 10);
+    const skip = parseInt((req.query.skip as string) || "0", 10);
     // Total count before pagination
     const total = await Event.countDocuments();
     // Fetch paginated events
@@ -118,16 +126,16 @@ export const getAllEvents = async (
       .sort({ startDateTime: 1 })
       .skip(skip)
       .limit(limit)
-      .populate('profileIds', 'name timezone')
+      .populate("profileIds", "name timezone")
       .lean();
 
-    const formattedEvents = events.map(event => ({
+    const formattedEvents = events.map((event) => ({
       ...event,
       startDateTime: formatDateTime(event.startDateTime, clientTimezone),
       endDateTime: formatDateTime(event.endDateTime, clientTimezone),
       displayTimezone: clientTimezone,
       createdAt: formatDateTime(event.createdAt, clientTimezone),
-      updatedAt: formatDateTime(event.updatedAt, clientTimezone)
+      updatedAt: formatDateTime(event.updatedAt, clientTimezone),
     }));
 
     res.status(200).json({
@@ -139,7 +147,7 @@ export const getAllEvents = async (
       // Pagination info
       skip,
       limit,
-      data: formattedEvents
+      data: formattedEvents,
     });
   } catch (error) {
     next(error);
@@ -149,18 +157,18 @@ export const getAllEvents = async (
 export const getEventById = async (
   req: Request,
   res: Response<ApiResponse<any>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { eventId } = req.params;
-    const clientTimezone = req.clientTimezone || 'UTC';
+    const clientTimezone = req.clientTimezone || "UTC";
 
     const event = await Event.findById(eventId)
-      .populate('profileIds', 'name timezone')
+      .populate("profileIds", "name timezone")
       .lean();
 
     if (!event) {
-      const error: any = new Error('Event not found');
+      const error: any = new Error("Event not found");
       error.statusCode = 404;
       throw error;
     }
@@ -172,12 +180,12 @@ export const getEventById = async (
       endDateTime: formatDateTime(event.endDateTime, clientTimezone),
       displayTimezone: clientTimezone,
       createdAt: formatDateTime(event.createdAt, clientTimezone),
-      updatedAt: formatDateTime(event.updatedAt, clientTimezone)
+      updatedAt: formatDateTime(event.updatedAt, clientTimezone),
     };
 
     res.status(200).json({
       success: true,
-      data: formattedEvent
+      data: formattedEvent,
     });
   } catch (error) {
     next(error);
@@ -187,33 +195,44 @@ export const getEventById = async (
 export const updateEvent = async (
   req: Request,
   res: Response<ApiResponse<IEventDocument>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { eventId } = req.params;
-    const { title, description, profileIds, timezone, startDateTime, endDateTime } = req.body;
+    const {
+      title,
+      description,
+      profileIds,
+      timezone,
+      startDateTime,
+      endDateTime,
+    } = req.body;
 
     const existingEvent = await Event.findById(eventId);
-    
+
     if (!existingEvent || !eventId) {
-      const error: any = new Error('Event not found');
+      const error: any = new Error("Event not found");
       error.statusCode = 404;
       throw error;
     }
 
     const previousValues = existingEvent.toObject();
     const updates: any = {};
-    
+
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
-    
+
     if (profileIds && Array.isArray(profileIds)) {
-      updates.profileIds = profileIds.map((id: string) => new Types.ObjectId(id));
+      updates.profileIds = profileIds.map(
+        (id: string) => new Types.ObjectId(id),
+      );
     }
 
     if (startDateTime && endDateTime && timezone) {
       if (!validateDateRange(startDateTime, endDateTime, timezone)) {
-        const error: any = new Error('End date/time must be after start date/time');
+        const error: any = new Error(
+          "End date/time must be after start date/time",
+        );
         error.statusCode = 400;
         throw error;
       }
@@ -221,23 +240,21 @@ export const updateEvent = async (
       updates.endDateTime = convertToUTC(endDateTime, timezone);
       updates.timezone = timezone;
     } else if (startDateTime || endDateTime) {
-      const error: any = new Error('Both startDateTime and endDateTime must be provided together');
+      const error: any = new Error(
+        "Both startDateTime and endDateTime must be provided together",
+      );
       error.statusCode = 400;
       throw error;
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      updates,
-      { 
-        new: true, 
-        runValidators: false,  
-        context: 'query'
-      }
-    ).populate('profileIds', 'name timezone');
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, updates, {
+      new: true,
+      runValidators: false,
+      context: "query",
+    }).populate("profileIds", "name timezone");
 
     if (!updatedEvent) {
-      const error: any = new Error('Event update failed');
+      const error: any = new Error("Event update failed");
       error.statusCode = 500;
       throw error;
     }
@@ -245,14 +262,16 @@ export const updateEvent = async (
     // Log the change
     await EventLog.create({
       eventId,
-      action: 'updated',
+      action: "updated",
       previousValues,
-      newValues: updatedEvent.toObject()
+      newValues: updatedEvent.toObject(),
     });
 
     const allProfileIds = new Set([
-      ...existingEvent.profileIds.map(id => id.toString()),
-      ...(updates.profileIds || existingEvent.profileIds).map((id: any) => id.toString())
+      ...existingEvent.profileIds.map((id) => id.toString()),
+      ...(updates.profileIds || existingEvent.profileIds).map((id: any) =>
+        id.toString(),
+      ),
     ]);
 
     for (const profileId of allProfileIds) {
@@ -263,8 +282,8 @@ export const updateEvent = async (
 
     res.status(200).json({
       success: true,
-      message: 'Event updated successfully',
-      data: updatedEvent
+      message: "Event updated successfully",
+      data: updatedEvent,
     });
   } catch (error) {
     next(error);
@@ -274,14 +293,14 @@ export const updateEvent = async (
 export const getEventLogs = async (
   req: Request,
   res: Response<ApiResponse<any[]>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { eventId } = req.params;
-    const clientTimezone = req.clientTimezone || 'UTC';
+    const clientTimezone = req.clientTimezone || "UTC";
     // Pagination parameters
-    const limit = parseInt((req.query.limit as string) || '100', 10);
-    const skip = parseInt((req.query.skip as string) || '0', 10);
+    const limit = parseInt((req.query.limit as string) || "100", 10);
+    const skip = parseInt((req.query.skip as string) || "0", 10);
     // Filter by eventId
     const filter = { eventId: new Types.ObjectId(eventId) };
     // Total count before pagination
@@ -293,29 +312,45 @@ export const getEventLogs = async (
       .limit(limit)
       .lean();
 
-    const formattedLogs = logs.map(log => ({
+    const formattedLogs = logs.map((log) => ({
       ...log,
       createdAt: formatDateTime(log.createdAt, clientTimezone),
       updatedAt: formatDateTime(log.updatedAt, clientTimezone),
       displayTimezone: clientTimezone,
-      previousValues: log.previousValues ? {
-        ...log.previousValues,
-        startDateTime: log.previousValues.startDateTime 
-          ? formatDateTime(new Date(log.previousValues.startDateTime), clientTimezone)
-          : undefined,
-        endDateTime: log.previousValues.endDateTime
-          ? formatDateTime(new Date(log.previousValues.endDateTime), clientTimezone)
-          : undefined
-      } : undefined,
-      newValues: log.newValues ? {
-        ...log.newValues,
-        startDateTime: log.newValues.startDateTime
-          ? formatDateTime(new Date(log.newValues.startDateTime), clientTimezone)
-          : undefined,
-        endDateTime: log.newValues.endDateTime
-          ? formatDateTime(new Date(log.newValues.endDateTime), clientTimezone)
-          : undefined
-      } : undefined
+      previousValues: log.previousValues
+        ? {
+            ...log.previousValues,
+            startDateTime: log.previousValues.startDateTime
+              ? formatDateTime(
+                  new Date(log.previousValues.startDateTime),
+                  clientTimezone,
+                )
+              : undefined,
+            endDateTime: log.previousValues.endDateTime
+              ? formatDateTime(
+                  new Date(log.previousValues.endDateTime),
+                  clientTimezone,
+                )
+              : undefined,
+          }
+        : undefined,
+      newValues: log.newValues
+        ? {
+            ...log.newValues,
+            startDateTime: log.newValues.startDateTime
+              ? formatDateTime(
+                  new Date(log.newValues.startDateTime),
+                  clientTimezone,
+                )
+              : undefined,
+            endDateTime: log.newValues.endDateTime
+              ? formatDateTime(
+                  new Date(log.newValues.endDateTime),
+                  clientTimezone,
+                )
+              : undefined,
+          }
+        : undefined,
     }));
 
     res.status(200).json({
@@ -327,7 +362,7 @@ export const getEventLogs = async (
       // Pagination info
       skip,
       limit,
-      data: formattedLogs
+      data: formattedLogs,
     });
   } catch (error) {
     next(error);

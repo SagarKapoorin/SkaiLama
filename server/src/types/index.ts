@@ -1,4 +1,4 @@
-import { Document, Types } from 'mongoose';
+import { Document, Types } from "mongoose";
 export interface IProfile {
   _id: Types.ObjectId;
   name: string;
@@ -8,7 +8,7 @@ export interface IProfile {
   __v?: number;
 }
 
-export interface IProfileDocument extends Omit<IProfile, '_id'>, Document {
+export interface IProfileDocument extends Omit<IProfile, "_id">, Document {
   _id: Types.ObjectId;
 }
 export interface IEvent {
@@ -24,13 +24,13 @@ export interface IEvent {
   __v?: number;
 }
 
-export interface IEventDocument extends Omit<IEvent, '_id'>, Document {
+export interface IEventDocument extends Omit<IEvent, "_id">, Document {
   _id: Types.ObjectId;
 }
 export interface IEventLog {
   _id: Types.ObjectId;
   eventId: Types.ObjectId;
-  action: 'created' | 'updated' | 'deleted';
+  action: "created" | "updated" | "deleted";
   previousValues?: Record<string, any>;
   newValues?: Record<string, any>;
   updatedBy: string;
@@ -39,7 +39,7 @@ export interface IEventLog {
   __v?: number;
 }
 
-export interface IEventLogDocument extends Omit<IEventLog, '_id'>, Document {
+export interface IEventLogDocument extends Omit<IEventLog, "_id">, Document {
   _id: Types.ObjectId;
 }
 
@@ -53,7 +53,6 @@ export interface ApiResponse<T = any> {
   message?: string;
   errors?: any[];
 }
-
 
 export interface PaginationParams {
   page: number;

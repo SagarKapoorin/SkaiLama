@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction } from 'express';
-import { getCachedData, setCachedData } from '../utils/cacheHelper.js';
-import { isRedisAvailable } from '../config/redis.js';
+import type { Request, Response, NextFunction } from "express";
+import { getCachedData, setCachedData } from "../utils/cacheHelper.js";
+import { isRedisAvailable } from "../config/redis.js";
 
 interface CacheOptions {
   keyGenerator: (req: Request) => string;
@@ -8,9 +8,13 @@ interface CacheOptions {
 }
 
 export const cacheMiddleware = (options: CacheOptions) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     //skip caching if Redis unavailable or not GET request
-    if (!isRedisAvailable() || req.method !== 'GET') {
+    if (!isRedisAvailable() || req.method !== "GET") {
       next();
       return;
     }
@@ -33,7 +37,7 @@ export const cacheMiddleware = (options: CacheOptions) => {
       };
       next();
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      console.error("Cache middleware error:", error);
       next();
     }
   };

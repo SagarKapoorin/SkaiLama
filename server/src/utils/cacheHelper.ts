@@ -1,6 +1,6 @@
-import { getRedisClient, isRedisAvailable } from '../config/redis.js';
+import { getRedisClient, isRedisAvailable } from "../config/redis.js";
 
-const DEFAULT_TTL = parseInt(process.env.REDIS_TTL || '432000', 10);
+const DEFAULT_TTL = parseInt(process.env.REDIS_TTL || "432000", 10);
 export const getCachedData = async <T>(key: string): Promise<T | null> => {
   if (!isRedisAvailable()) return null;
   try {
@@ -14,15 +14,15 @@ export const getCachedData = async <T>(key: string): Promise<T | null> => {
     console.log(`Cache MISS: ${key}`);
     return null;
   } catch (error) {
-    console.error('Redis GET error:', error);
+    console.error("Redis GET error:", error);
     return null;
   }
 };
 
 export const setCachedData = async (
-  key: string, 
-  data: any, 
-  ttl: number = DEFAULT_TTL
+  key: string,
+  data: any,
+  ttl: number = DEFAULT_TTL,
 ): Promise<void> => {
   if (!isRedisAvailable()) return;
 
@@ -31,7 +31,7 @@ export const setCachedData = async (
     await client.setEx(key, ttl, JSON.stringify(data));
     // console.log(`Cache SET: ${key} (TTL: ${ttl}s)`);
   } catch (error) {
-    console.error('Redis SET error:', error);
+    console.error("Redis SET error:", error);
   }
 };
 export const deleteCachedData = async (key: string): Promise<void> => {
@@ -40,11 +40,13 @@ export const deleteCachedData = async (key: string): Promise<void> => {
     const client = getRedisClient();
     await client.del(key);
   } catch (error) {
-    console.error('Redis DEL error:', error);
+    console.error("Redis DEL error:", error);
   }
 };
 
-export const deleteCachedDataByPattern = async (pattern: string): Promise<void> => {
+export const deleteCachedDataByPattern = async (
+  pattern: string,
+): Promise<void> => {
   if (!isRedisAvailable()) return;
   try {
     const client = getRedisClient();
@@ -53,7 +55,7 @@ export const deleteCachedDataByPattern = async (pattern: string): Promise<void> 
       await client.del(keys);
     }
   } catch (error) {
-    console.error('Redis pattern DELETE error:', error);
+    console.error("Redis pattern DELETE error:", error);
   }
 };
 
@@ -64,12 +66,11 @@ export const clearAllCache = async (): Promise<void> => {
     await client.flushAll();
     // console.log('All cache cleared');
   } catch (error) {
-    console.error('Redis FLUSH error:', error);
+    console.error("Redis FLUSH error:", error);
   }
 };
 
 export const generateCacheKey = {
-
   allProfiles: (skip: number = 0, limit: number = 100) =>
     `profiles:all:skip:${skip}:limit:${limit}`,
   profileById: (profileId: string) => `profile:${profileId}`,
@@ -77,10 +78,10 @@ export const generateCacheKey = {
     profileId: string,
     timezone: string,
     skip: number = 0,
-    limit: number = 100
+    limit: number = 100,
   ) => `events:profile:${profileId}:tz:${timezone}:skip:${skip}:limit:${limit}`,
   eventById: (eventId: string) => `event:${eventId}`,
   eventLogs: (eventId: string, skip: number = 0, limit: number = 100) =>
     `event:${eventId}:logs:skip:${skip}:limit:${limit}`,
-  allTimezones: () => 'timezones:all'
+  allTimezones: () => "timezones:all",
 };
