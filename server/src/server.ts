@@ -1,6 +1,7 @@
-import  type { Application, Request, Response } from 'express';
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+import type { Application, Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -13,9 +14,6 @@ import { timezoneDetector } from './middleware/timezoneMiddleware.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { getAllTimezones } from './utils/timezoneHelper.js';
 import { redisRateLimiter } from './middleware/rateLimiter.js';
-
-dotenv.config();
-
 connectDB();
 connectRedis();
 

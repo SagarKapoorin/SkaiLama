@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const MongoDB_URI:string = process.env.MONGODB_URI || 'mongodb://localhost:27017/event-management';
@@ -14,7 +15,7 @@ const connectDB = async (): Promise<void> => {
       socketTimeoutMS: 45000,
       serverSelectionTimeoutMS: 5000
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected`);
     mongoose.connection.on('error', (err) => {
       console.error('MongoDB connection error:', err);
     });

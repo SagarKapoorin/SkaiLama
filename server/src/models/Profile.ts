@@ -1,6 +1,5 @@
 import { Schema, model } from 'mongoose';
 import type { IProfileDocument } from '../types/index.js';
-
 const profileSchema = new Schema<IProfileDocument>({
   name: {
     type: String,
@@ -13,20 +12,6 @@ const profileSchema = new Schema<IProfileDocument>({
     type: String,
     required: [true, 'Timezone is required'],
     default: 'UTC',
-    validate: {
-      validator: function(v: string) {
-        try {
-          const dayjs = require('dayjs');
-          const timezone = require('dayjs/plugin/timezone');
-          dayjs.extend(timezone);
-          dayjs.tz('2024-01-01', v);// eg date for testing only
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      message: 'Invalid timezone'
-    }
   }
 }, {
   timestamps: true,

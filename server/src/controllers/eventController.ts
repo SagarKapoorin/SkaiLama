@@ -184,9 +184,11 @@ export const updateEvent = async (
 
     const previousValues = existingEvent.toObject();
     const updates: any = {};
-    if (title) updates.title = title;
+    
+    if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
-    if (profileIds) {
+    
+    if (profileIds && Array.isArray(profileIds)) {
       updates.profileIds = profileIds.map((id: string) => new Types.ObjectId(id));
     }
 
@@ -199,24 +201,39 @@ export const updateEvent = async (
       updates.startDateTime = convertToUTC(startDateTime, timezone);
       updates.endDateTime = convertToUTC(endDateTime, timezone);
       updates.timezone = timezone;
+    } else if (startDateTime || endDateTime) {
+      const error: any = new Error('Both startDateTime and endDateTime must be provided together');
+      error.statusCode = 400;
+      throw error;
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(
       eventId,
       updates,
-      { new: true, runValidators: true }
+      { 
+        new: true, 
+        runValidators: false,  
+        context: 'query'
+      }
     ).populate('profileIds', 'name timezone');
 
+    if (!updatedEvent) {
+      const error: any = new Error('Event update failed');
+      error.statusCode = 500;
+      throw error;
+    }
+
+    // Log the change
     await EventLog.create({
       eventId,
       action: 'updated',
       previousValues,
-      newValues: updatedEvent?.toObject()
+      newValues: updatedEvent.toObject()
     });
 
     const allProfileIds = new Set([
       ...existingEvent.profileIds.map(id => id.toString()),
-      ...(profileIds || existingEvent.profileIds).map((id: any) => id.toString())
+      ...(updates.profileIds || existingEvent.profileIds).map((id: any) => id.toString())
     ]);
 
     for (const profileId of allProfileIds) {
@@ -228,12 +245,13 @@ export const updateEvent = async (
     res.status(200).json({
       success: true,
       message: 'Event updated successfully',
-      data: updatedEvent!
+      data: updatedEvent
     });
   } catch (error) {
     next(error);
   }
 };
+
 export const getEventLogs = async (
   req: Request,
   res: Response<ApiResponse<any[]>>,

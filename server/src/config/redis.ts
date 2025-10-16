@@ -1,7 +1,7 @@
-import { createClient } from 'redis';
-import type { RedisClientType } from 'redis';
 import dotenv from 'dotenv';
 dotenv.config();
+import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
 
 let redisClient: RedisClientType | null = null;
 let isRedisConnected = false;
@@ -52,6 +52,6 @@ export const isRedisAvailable = (): boolean => {
 export const disconnectRedis = async (): Promise<void> => {
   if (redisClient) {
     await redisClient.quit();
-    console.log('✅ Redis disconnected');
+    console.log('Redis disconnected');
   }
 };
